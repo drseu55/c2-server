@@ -16,9 +16,8 @@ async fn echo(req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
 }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+// TODO: Implement XChaCha20-Poly1305 for encypred communication
+// TODO: Store Argon2 passwords in database
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -29,11 +28,10 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .app_data(pool.clone())
+            .app_data(web::Data::new(pool.clone()))
             .service(handlers::ping_handler::ping)
             .service(echo)
             .service(handlers::exchange_handler::exchange)
-            .route("/hey", web::get().to(manual_hello))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
