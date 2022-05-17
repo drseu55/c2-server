@@ -1,0 +1,22 @@
+[package]
+name = "c2-server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4"
+diesel = {version = "1.4.4", features = ["postgres","uuidv07", "r2d2", "chrono"]}
+r2d2 = "0"
+serde = { version = "1", features = ["derive"] }
+dotenv = "0"
+chrono = { version = "0", features = ["serde"] }
+x25519-dalek = "1"
+rand_core = "0.5"
+blake3 = "1"
+hex = "0.4"
+base64 = "0"
+argon2 = "0"
+uuid = { version = "0.8.2", features = ["serde", "v4"] }
+thiserror = "1"
