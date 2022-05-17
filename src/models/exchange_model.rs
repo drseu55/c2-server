@@ -2,17 +2,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 pub struct ExchangeResponse {
-    pub value: String,
+    pub action: String,
+    pub public_key: String,
 }
 
 impl ExchangeResponse {
-    pub fn new(value: String) -> Self {
-        ExchangeResponse { value }
+    pub fn new(action: String, public_key: String) -> Self {
+        ExchangeResponse { action, public_key }
     }
 }
 
 #[derive(Deserialize)]
 pub struct ExchangeRequest {
     pub action: String,
-    pub key: String,
+    pub public_key: String,
 }
