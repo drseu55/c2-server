@@ -1,3 +1,4 @@
+use actix_web::error::BlockingError;
 use actix_web::HttpResponse;
 use actix_web::ResponseError;
 use thiserror::Error;
@@ -13,25 +14,31 @@ pub enum ServerError {
 }
 
 impl std::convert::From<argon2::password_hash::Error> for ServerError {
-    fn from(err: argon2::password_hash::Error) -> Self {
+    fn from(_err: argon2::password_hash::Error) -> Self {
         ServerError::InternalServerError
     }
 }
 
 impl std::convert::From<r2d2::Error> for ServerError {
-    fn from(err: r2d2::Error) -> Self {
+    fn from(_err: r2d2::Error) -> Self {
         ServerError::InternalServerError
     }
 }
 
 impl std::convert::From<actix_web::Error> for ServerError {
-    fn from(err: actix_web::Error) -> Self {
+    fn from(_err: actix_web::Error) -> Self {
         ServerError::InternalServerError
     }
 }
 
 impl std::convert::From<diesel::result::Error> for ServerError {
-    fn from(err: diesel::result::Error) -> Self {
+    fn from(_err: diesel::result::Error) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
+impl std::convert::From<BlockingError> for ServerError {
+    fn from(_err: BlockingError) -> Self {
         ServerError::InternalServerError
     }
 }

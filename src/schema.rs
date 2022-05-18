@@ -2,6 +2,7 @@ table! {
     implants (implant_id) {
         implant_id -> Uuid,
         public_key -> Text,
+        server_private_key -> Text,
         created_at -> Timestamp,
     }
 }

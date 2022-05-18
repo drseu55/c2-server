@@ -21,6 +21,8 @@ async fn echo(req_body: String) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    std::env::set_var("RUST_LOG", "actix_web=debug");
+
     dotenv::dotenv().ok();
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
