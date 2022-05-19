@@ -14,12 +14,29 @@ pub struct User {
 }
 
 impl User {
-    pub fn from_details<S: Into<String>, T: Into<String>>(username: S, password: T) -> Self {
+    pub fn new(username: String, password: String) -> Self {
         User {
             user_id: uuid::Uuid::new_v4(),
-            username: username.into(),
-            password: password.into(),
+            username,
+            password,
             created_at: chrono::Local::now().naive_local(),
         }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct UserAuthRequest {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Serialize)]
+pub struct UserAuthResponse {
+    pub token: String,
+}
+
+impl UserAuthResponse {
+    pub fn new(token: String) -> Self {
+        UserAuthResponse { token }
     }
 }

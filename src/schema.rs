@@ -8,6 +8,16 @@ table! {
 }
 
 table! {
+    tasks (task_id) {
+        task_id -> Uuid,
+        task -> Text,
+        created_at -> Timestamp,
+        status -> Text,
+        implant_id -> Uuid,
+    }
+}
+
+table! {
     users (user_id) {
         user_id -> Uuid,
         username -> Text,
@@ -16,7 +26,10 @@ table! {
     }
 }
 
+joinable!(tasks -> implants (implant_id));
+
 allow_tables_to_appear_in_same_query!(
     implants,
+    tasks,
     users,
 );

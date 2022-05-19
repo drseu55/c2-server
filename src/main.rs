@@ -1,7 +1,13 @@
 #[macro_use]
 extern crate diesel;
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{
+    dev::ServiceRequest, get, middleware, post, web, App, HttpResponse, HttpServer, Responder,
+    Result,
+};
+use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
+use actix_web_httpauth::extractors::AuthenticationError;
+use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv;
 
 mod db;
@@ -11,9 +17,25 @@ mod models;
 mod schema;
 mod utils;
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+async fn validator(
+    req: ServiceRequest,
+    credentials: BearerAuth,
+) -> Result<ServiceRequest, actix_web::Error> {
+    let config = req
+        .app_data::<Config>()
+        .map(|data| data.clone())
+        .unwrap_or_else(Default::default);
+
+    match handlers::auth_handler::validate_token(credentials.token()) {
+        Ok(res) => {
+            if res == true {
+                Ok(req)
+            } else {
+                Err(AuthenticationError::from(config).into())
+            }
+        }
+        Err(_) => Err(AuthenticationError::from(config).into()),
+    }
 }
 
 // TODO: Implement XChaCha20-Poly1305 for encypred communication
@@ -29,11 +51,20 @@ async fn main() -> std::io::Result<()> {
     let pool = db::connect::connect(database_url);
 
     HttpServer::new(move || {
+        let auth = HttpAuthentication::bearer(validator);
+
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .wrap(middleware::Logger::default())
             .service(handlers::ping_handler::ping)
-            .service(echo)
             .service(handlers::exchange_handler::exchange)
+            .service(handlers::auth_handler::auth)
+            .service(handlers::auth_handler::register)
+            .service(
+                web::scope("/api/web")
+                    .wrap(auth)
+                    .service(handlers::auth_handler::testauth),
+            )
     })
     .bind(("127.0.0.1", 8080))?
     .run()
