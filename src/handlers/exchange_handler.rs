@@ -2,6 +2,7 @@ use actix_web::{get, post, web, Responder, Result};
 use base64;
 use diesel::prelude::*;
 use hex;
+use uuid;
 use x25519_dalek;
 
 use crate::db::connect::Pool;
@@ -19,10 +20,13 @@ pub async fn init_exchange(
     let keypair = utils::x25519::generate_keypair();
 
     // Generate server public key and send it to implant
-    let (private_key_base64, exchange_response) = generate_and_encode(keypair);
+    let (private_key_base64, public_key_base64) = encode_keypairs(keypair);
 
     // Get data from request body and save it in database
-    web::block(move || add_implant(db, req_body, private_key_base64)).await??;
+    let implant_id = web::block(move || add_implant(db, req_body, private_key_base64)).await??;
+
+    let exchange_response =
+        exchange::ExchangeResponse::new(public_key_base64, implant_id.to_string());
 
     Ok(web::Json(exchange_response))
 }
@@ -31,7 +35,7 @@ fn add_implant(
     db: web::Data<Pool>,
     req_body: web::Json<exchange::ExchangeRequest>,
     server_private_key: String,
-) -> Result<(), ServerError> {
+) -> Result<uuid::Uuid, ServerError> {
     use crate::schema::implants::dsl::implants;
 
     let conn = db.get()?;
@@ -42,12 +46,12 @@ fn add_implant(
         .values(&implant)
         .execute(&conn)?;
 
-    Ok(())
+    Ok(implant.implant_id)
 }
 
-fn generate_and_encode(
+fn encode_keypairs(
     keypair: (x25519_dalek::StaticSecret, x25519_dalek::PublicKey),
-) -> (String, exchange::ExchangeResponse) {
+) -> (String, String) {
     // Encode private key
     let private_key_base64 = base64::encode(keypair.0.to_bytes());
 
@@ -56,7 +60,5 @@ fn generate_and_encode(
 
     let public_key_base64 = base64::encode(public_key_hex.as_bytes());
 
-    let exchange_response = exchange::ExchangeResponse::new(public_key_base64);
-
-    (private_key_base64, exchange_response)
+    (private_key_base64, public_key_base64)
 }

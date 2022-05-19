@@ -1,10 +1,7 @@
 #[macro_use]
 extern crate diesel;
 
-use actix_web::{
-    dev::ServiceRequest, get, middleware, post, web, App, HttpResponse, HttpServer, Responder,
-    Result,
-};
+use actix_web::{dev::ServiceRequest, middleware, web, App, HttpServer, Result};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -38,9 +35,6 @@ async fn validator(
     }
 }
 
-// TODO: Implement XChaCha20-Poly1305 for encypred communication
-// TODO: Store Argon2 passwords in database
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug");
@@ -57,13 +51,15 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .wrap(middleware::Logger::default())
             .service(handlers::ping_handler::ping)
-            .service(handlers::exchange_handler::exchange)
+            .service(handlers::exchange_handler::init_exchange)
             .service(handlers::auth_handler::auth)
             .service(handlers::auth_handler::register)
             .service(
                 web::scope("/api/web")
                     .wrap(auth)
-                    .service(handlers::auth_handler::testauth),
+                    .service(handlers::auth_handler::testauth)
+                    .service(handlers::task_handler::tasks_post)
+                    .service(handlers::task_handler::tasks_get),
             )
     })
     .bind(("127.0.0.1", 8080))?
