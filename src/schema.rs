@@ -4,6 +4,14 @@ table! {
         public_key -> Text,
         server_private_key -> Text,
         created_at -> Timestamp,
+        external_ip_address -> Nullable<Text>,
+        internal_ip_address -> Nullable<Text>,
+        os_type -> Nullable<Text>,
+        machine_user -> Nullable<Text>,
+        machine_name -> Nullable<Text>,
+        process_name -> Nullable<Text>,
+        pid -> Nullable<Int4>,
+        architecture -> Nullable<Int4>,
     }
 }
 

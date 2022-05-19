@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, HttpResponse, Responder, Result};
+use actix_web::{post, web, HttpResponse, Responder, Result};
 use base64;
 use chrono;
 use diesel::prelude::*;

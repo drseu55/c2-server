@@ -6,14 +6,14 @@ use x25519_dalek;
 
 use crate::db::connect::Pool;
 use crate::errors::ServerError;
-use crate::models::exchange_model;
+use crate::models::exchange;
 use crate::models::implant;
 use crate::utils;
 
 #[post("/api/exchange")]
-pub async fn exchange(
+pub async fn init_exchange(
     db: web::Data<Pool>,
-    req_body: web::Json<exchange_model::ExchangeRequest>,
+    req_body: web::Json<exchange::ExchangeRequest>,
 ) -> Result<impl Responder, ServerError> {
     // Generate keypair
     let keypair = utils::x25519::generate_keypair();
@@ -29,7 +29,7 @@ pub async fn exchange(
 
 fn add_implant(
     db: web::Data<Pool>,
-    req_body: web::Json<exchange_model::ExchangeRequest>,
+    req_body: web::Json<exchange::ExchangeRequest>,
     server_private_key: String,
 ) -> Result<(), ServerError> {
     use crate::schema::implants::dsl::implants;
@@ -47,7 +47,7 @@ fn add_implant(
 
 fn generate_and_encode(
     keypair: (x25519_dalek::StaticSecret, x25519_dalek::PublicKey),
-) -> (String, exchange_model::ExchangeResponse) {
+) -> (String, exchange::ExchangeResponse) {
     // Encode private key
     let private_key_base64 = base64::encode(keypair.0.to_bytes());
 
@@ -56,7 +56,7 @@ fn generate_and_encode(
 
     let public_key_base64 = base64::encode(public_key_hex.as_bytes());
 
-    let exchange_response = exchange_model::ExchangeResponse::new(public_key_base64);
+    let exchange_response = exchange::ExchangeResponse::new(public_key_base64);
 
     (private_key_base64, exchange_response)
 }

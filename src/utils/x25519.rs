@@ -17,6 +17,6 @@ pub fn generate_shared_secret(
 
 // TODO: Change function to also accept text for encryption
 // and return encrypted text
-pub fn blake3_hash(secret_key_bytes: &[u8]) -> blake3::Hash {
+pub fn blake3_hash_text(secret_key_bytes: &[u8]) -> blake3::Hash {
     blake3::hash(secret_key_bytes)
 }
