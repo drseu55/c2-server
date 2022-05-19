@@ -1,5 +1,5 @@
 use blake3;
-use rand_core::OsRng;
+use rand::rngs::OsRng;
 use x25519_dalek::{PublicKey, SharedSecret, StaticSecret};
 
 pub fn generate_keypair() -> (StaticSecret, PublicKey) {
