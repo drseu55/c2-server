@@ -43,6 +43,24 @@ impl std::convert::From<BlockingError> for ServerError {
     }
 }
 
+impl std::convert::From<jsonwebtoken::errors::Error> for ServerError {
+    fn from(_err: jsonwebtoken::errors::Error) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
+impl std::convert::From<base64::DecodeError> for ServerError {
+    fn from(_err: base64::DecodeError) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
+impl std::convert::From<std::string::FromUtf8Error> for ServerError {
+    fn from(_err: std::string::FromUtf8Error) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
 impl ResponseError for ServerError {
     fn error_response(&self) -> HttpResponse {
