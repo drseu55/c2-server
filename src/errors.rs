@@ -61,6 +61,18 @@ impl std::convert::From<std::string::FromUtf8Error> for ServerError {
     }
 }
 
+impl std::convert::From<uuid::Error> for ServerError {
+    fn from(_err: uuid::Error) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
+impl std::convert::From<arrayvec::ArrayVec<u8, 32_usize>> for ServerError {
+    fn from(_err: arrayvec::ArrayVec<u8, 32_usize>) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
 impl ResponseError for ServerError {
     fn error_response(&self) -> HttpResponse {

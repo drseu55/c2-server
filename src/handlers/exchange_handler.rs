@@ -17,7 +17,7 @@ pub async fn init_exchange(
     req_body: web::Json<exchange::ExchangeRequest>,
 ) -> Result<impl Responder, ServerError> {
     // Generate keypair
-    let keypair = utils::x25519::generate_keypair();
+    let keypair = utils::network_encryption::generate_keypair();
 
     // Generate server public key and send it to implant
     let (private_key_base64, public_key_base64) = encode_keypairs(keypair);

@@ -54,10 +54,10 @@ async fn main() -> std::io::Result<()> {
             .service(handlers::exchange_handler::init_exchange)
             .service(handlers::auth_handler::auth)
             .service(handlers::auth_handler::register)
+            .service(handlers::task_handler::implant_tasks)
             .service(
                 web::scope("/api/web")
                     .wrap(auth)
-                    .service(handlers::auth_handler::testauth)
                     .service(handlers::task_handler::tasks_post)
                     .service(handlers::task_handler::tasks_get),
             )

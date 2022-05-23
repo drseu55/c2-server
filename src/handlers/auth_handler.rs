@@ -134,8 +134,3 @@ fn check_if_matches(
 
     Ok(false)
 }
-
-#[post("/testauth")]
-pub async fn testauth() -> impl Responder {
-    HttpResponse::Ok().body("Testing auth baby!")
-}

@@ -1,2 +1,2 @@
 pub mod argon2;
-pub mod x25519;
+pub mod network_encryption;

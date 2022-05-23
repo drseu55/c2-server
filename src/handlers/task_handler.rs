@@ -1,17 +1,77 @@
 use actix_web::{get, post, web, HttpResponse, Responder};
+use arrayvec::ArrayVec;
+use base64;
+use bincode;
 use diesel::prelude::*;
+use uuid;
+use x25519_dalek;
 
 use crate::db::connect::Pool;
 use crate::errors::ServerError;
-use crate::models::task;
+use crate::models::{implant, task};
+use crate::utils::network_encryption;
 
 #[get("/api/tasks/{implant_id}")]
-pub async fn implant_tasks(db: web::Data<Pool>) -> impl Responder {
-    // TODO: Get implant id from URL
-    // TODO: Get only tasks from db that belongs to received implant id
+pub async fn implant_tasks(
+    db: web::Data<Pool>,
+    path: web::Path<String>,
+) -> Result<impl Responder, ServerError> {
+    let implant_id = path.into_inner();
+
+    // Get only tasks from db that belongs to received implant id
+    let (implant, tasks) = web::block(move || get_implant_tasks(db, implant_id)).await??;
+
     // TODO: Implement XChaCha20-Poly1305 for encrypted communication
-    // TODO: Implement response structure
-    HttpResponse::Ok().body("implant tasks get")
+    // Convert base64 to [u8; 32]
+    let server_private_key_base64 = implant.server_private_key;
+    let implant_public_key_base64 = implant.public_key;
+
+    let server_private_key_vec = base64::decode(server_private_key_base64)?;
+    let server_private_key_bytes: ArrayVec<u8, 32> = server_private_key_vec.into_iter().collect();
+    let server_private_key_bytes = server_private_key_bytes.into_inner()?;
+
+    let implant_public_key_vec = base64::decode(implant_public_key_base64)?;
+    let implant_public_key_bytes: ArrayVec<u8, 32> = implant_public_key_vec.into_iter().collect();
+    let implant_public_key_bytes = implant_public_key_bytes.into_inner()?;
+
+    let server_private_key = x25519_dalek::StaticSecret::from(server_private_key_bytes);
+    let implant_public_key = x25519_dalek::PublicKey::from(implant_public_key_bytes);
+
+    // Generate x25519 shared secret
+    let x25519_shared_secret =
+        network_encryption::generate_shared_secret(server_private_key, implant_public_key);
+
+    // Generate BLAKE3 hashed key
+    let blake3_hashed_key = network_encryption::blake3_hash_key(x25519_shared_secret.as_bytes());
+
+    // Encrypt message (XChaCha20Poly1305)
+    let encoded_tasks = bincode::serialize(&tasks).expect("Vector encode error");
+    let encrypted_response =
+        network_encryption::xchacha20poly1305_encrypt_message(blake3_hashed_key, &encoded_tasks);
+
+    // Base64 encode encrypted response byte array
+    let base64_encrypted_response = base64::encode(encrypted_response);
+
+    Ok(HttpResponse::Ok().body(base64_encrypted_response))
+}
+
+fn get_implant_tasks(
+    db: web::Data<Pool>,
+    implant_id: String,
+) -> Result<(implant::Implant, Vec<task::Task>), ServerError> {
+    use crate::schema::implants::dsl::implants;
+
+    let conn = db.get()?;
+
+    let implant_id = uuid::Uuid::parse_str(&implant_id)?;
+
+    let implant = implants
+        .find(implant_id)
+        .get_result::<implant::Implant>(&conn)?;
+
+    let implant_tasks_vec = task::Task::belonging_to(&implant).load::<task::Task>(&conn)?;
+
+    Ok((implant, implant_tasks_vec))
 }
 
 #[get("/tasks")]
