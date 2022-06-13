@@ -55,6 +55,7 @@ async fn main() -> std::io::Result<()> {
             .service(handlers::auth_handler::auth)
             .service(handlers::auth_handler::register)
             .service(handlers::task_handler::implant_tasks)
+            .service(handlers::result_handler::post_task)
             .service(
                 web::scope("/api/web")
                     .wrap(auth)

@@ -1,7 +1,6 @@
-use actix_web::{get, post, web, Responder, Result};
+use actix_web::{post, web, Responder, Result};
 use base64;
 use diesel::prelude::*;
-use hex;
 use uuid;
 use x25519_dalek;
 
@@ -56,9 +55,7 @@ fn encode_keypairs(
     let private_key_base64 = base64::encode(keypair.0.to_bytes());
 
     // Encode public key
-    let public_key_hex = hex::encode(keypair.1.to_bytes());
-
-    let public_key_base64 = base64::encode(public_key_hex.as_bytes());
+    let public_key_base64 = base64::encode(keypair.1.as_bytes());
 
     (private_key_base64, public_key_base64)
 }

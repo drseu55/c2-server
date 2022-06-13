@@ -10,5 +10,5 @@ CREATE TABLE implants (
     machine_name TEXT,
     process_name TEXT,
     pid INTEGER,
-    architecture INTEGER
+    architecture TEXT
 );

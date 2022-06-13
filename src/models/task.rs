@@ -13,18 +13,24 @@ use crate::models::implant::Implant;
 pub struct Task {
     pub task_id: uuid::Uuid,
     pub task: String,
-    pub created_at: chrono::NaiveDateTime,
-    pub status: String,
+    pub task_created_at: chrono::NaiveDateTime,
+    pub task_status: String,
+    pub result_content: Option<String>,
+    pub result_nonce: Option<String>,
+    pub result_created_at: Option<chrono::NaiveDateTime>,
     pub implant_id: uuid::Uuid,
 }
 
 impl Task {
-    pub fn new(task: String, status: String, implant_id: uuid::Uuid) -> Self {
+    pub fn new(task: String, task_status: String, implant_id: uuid::Uuid) -> Self {
         Task {
             task_id: uuid::Uuid::new_v4(),
             task,
-            created_at: chrono::Local::now().naive_local(),
-            status,
+            task_created_at: chrono::Local::now().naive_local(),
+            task_status,
+            result_content: None,
+            result_nonce: None,
+            result_created_at: None,
             implant_id,
         }
     }
@@ -37,6 +43,23 @@ pub struct AddTaskRequest {
 }
 
 #[derive(Serialize)]
+pub struct ResponseTask {
+    pub task_id: uuid::Uuid,
+    pub task: String,
+    pub implant_id: uuid::Uuid,
+}
+
+impl ResponseTask {
+    pub fn new(task_id: uuid::Uuid, task: String, implant_id: uuid::Uuid) -> Self {
+        ResponseTask {
+            task_id,
+            task,
+            implant_id,
+        }
+    }
+}
+
+#[derive(Serialize)]
 pub struct AllTasksResponse {
     pub tasks: Vec<Task>,
 }
@@ -46,3 +69,42 @@ impl AllTasksResponse {
         AllTasksResponse { tasks }
     }
 }
+
+// #[derive(Deserialize)]
+// pub struct GetInfoResponse {
+//     pub external_ip_address: String,
+//     pub internal_ip_address: String,
+//     pub os_type: String,
+//     pub machine_user: String,
+//     pub machine_name: String,
+//     pub process_name: String,
+//     pub pid: u32,
+//     pub architecture: String,
+//     pub implant_id: String,
+// }
+
+// impl GetInfoResponse {
+//     pub fn new(
+//         external_ip_address: String,
+//         internal_ip_address: String,
+//         os_type: String,
+//         machine_user: String,
+//         machine_name: String,
+//         process_name: String,
+//         pid: u32,
+//         architecture: String,
+//         implant_id: String,
+//     ) -> Self {
+//         GetInfoResponse {
+//             external_ip_address,
+//             internal_ip_address,
+//             os_type,
+//             machine_user,
+//             machine_name,
+//             process_name,
+//             pid,
+//             architecture,
+//             implant_id,
+//         }
+//     }
+// }

@@ -11,16 +11,7 @@ table! {
         machine_name -> Nullable<Text>,
         process_name -> Nullable<Text>,
         pid -> Nullable<Int4>,
-        architecture -> Nullable<Int4>,
-    }
-}
-
-table! {
-    results (result_id) {
-        result_id -> Uuid,
-        result_content -> Text,
-        created_at -> Timestamp,
-        task_id -> Uuid,
+        architecture -> Nullable<Text>,
     }
 }
 
@@ -28,8 +19,11 @@ table! {
     tasks (task_id) {
         task_id -> Uuid,
         task -> Text,
-        created_at -> Timestamp,
-        status -> Text,
+        task_created_at -> Timestamp,
+        task_status -> Text,
+        result_content -> Nullable<Text>,
+        result_nonce -> Nullable<Text>,
+        result_created_at -> Nullable<Timestamp>,
         implant_id -> Uuid,
     }
 }
@@ -43,12 +37,10 @@ table! {
     }
 }
 
-joinable!(results -> tasks (task_id));
 joinable!(tasks -> implants (implant_id));
 
 allow_tables_to_appear_in_same_query!(
     implants,
-    results,
     tasks,
     users,
 );

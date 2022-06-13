@@ -19,7 +19,7 @@ pub struct Implant {
     pub machine_name: Option<String>,
     pub process_name: Option<String>,
     pub pid: Option<i32>,
-    pub architecture: Option<i32>,
+    pub architecture: Option<String>,
 }
 
 impl Implant {
