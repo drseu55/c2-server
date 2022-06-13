@@ -40,3 +40,16 @@ impl Implant {
         }
     }
 }
+
+#[derive(Debug, Deserialize)]
+pub struct SystemInfo {
+    pub external_ip_address: String,
+    pub internal_ip_address: String,
+    pub os_type: String,
+    pub machine_user: String,
+    pub machine_name: String,
+    pub process_name: String,
+    pub pid: i32,
+    pub architecture: String,
+    pub implant_id: String,
+}
