@@ -73,6 +73,24 @@ impl std::convert::From<arrayvec::ArrayVec<u8, 32_usize>> for ServerError {
     }
 }
 
+impl std::convert::From<arrayvec::ArrayVec<u8, 24_usize>> for ServerError {
+    fn from(_err: arrayvec::ArrayVec<u8, 24_usize>) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
+impl std::convert::From<arrayvec::ArrayVec<u8, 16_usize>> for ServerError {
+    fn from(_err: arrayvec::ArrayVec<u8, 16_usize>) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
+impl std::convert::From<Box<bincode::ErrorKind>> for ServerError {
+    fn from(_err: Box<bincode::ErrorKind>) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
 impl ResponseError for ServerError {
     fn error_response(&self) -> HttpResponse {
