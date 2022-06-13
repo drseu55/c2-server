@@ -24,8 +24,11 @@ pub async fn implant_tasks(
     let mut response_tasks: Vec<task::ResponseTask> = vec![];
 
     for task in tasks {
-        let response_task = task::ResponseTask::new(task.task_id, task.task, task.implant_id);
-        response_tasks.push(response_task);
+        // Show only tasks that are not answered yet
+        if task.task_status == "created".to_owned() {
+            let response_task = task::ResponseTask::new(task.task_id, task.task, task.implant_id);
+            response_tasks.push(response_task);
+        }
     }
 
     // Implement XChaCha20-Poly1305 for encrypted communication
