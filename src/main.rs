@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate diesel;
 
+use actix_cors::Cors;
 use actix_web::{dev::ServiceRequest, middleware, web, App, HttpServer, Result};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
@@ -46,9 +47,11 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         let auth = HttpAuthentication::bearer(validator);
+        let cors = Cors::permissive();
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .wrap(cors)
             .wrap(middleware::Logger::default())
             .service(handlers::ping_handler::ping)
             .service(handlers::exchange_handler::init_exchange)

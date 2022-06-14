@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 actix-web = "4"
 actix-web-httpauth = "0"
+actix-cors = "0"
 diesel = {version = "1.4.4", features = ["postgres","uuidv07", "r2d2", "chrono"]}
 r2d2 = "0"
 serde = { version = "1", features = ["derive"] }
