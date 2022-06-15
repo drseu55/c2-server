@@ -41,6 +41,48 @@ impl Implant {
     }
 }
 
+#[derive(Serialize)]
+pub struct ImplantInfoReduced {
+    pub implant_id: uuid::Uuid,
+    pub created_at: chrono::NaiveDateTime,
+    pub external_ip_address: Option<String>,
+    pub internal_ip_address: Option<String>,
+    pub os_type: Option<String>,
+    pub machine_user: Option<String>,
+    pub machine_name: Option<String>,
+    pub process_name: Option<String>,
+    pub pid: Option<i32>,
+    pub architecture: Option<String>,
+}
+
+impl ImplantInfoReduced {
+    pub fn new(
+        implant_id: uuid::Uuid,
+        created_at: chrono::NaiveDateTime,
+        external_ip_address: Option<String>,
+        internal_ip_address: Option<String>,
+        os_type: Option<String>,
+        machine_user: Option<String>,
+        machine_name: Option<String>,
+        process_name: Option<String>,
+        pid: Option<i32>,
+        architecture: Option<String>,
+    ) -> Self {
+        ImplantInfoReduced {
+            implant_id,
+            created_at,
+            external_ip_address,
+            internal_ip_address,
+            os_type,
+            machine_user,
+            machine_name,
+            process_name,
+            pid,
+            architecture,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct SystemInfo {
     pub external_ip_address: String,
@@ -52,4 +94,15 @@ pub struct SystemInfo {
     pub pid: i32,
     pub architecture: String,
     pub implant_id: String,
+}
+
+#[derive(Serialize)]
+pub struct AllImplants {
+    pub implants: Vec<ImplantInfoReduced>,
+}
+
+impl AllImplants {
+    pub fn new(implants: Vec<ImplantInfoReduced>) -> Self {
+        AllImplants { implants }
+    }
 }

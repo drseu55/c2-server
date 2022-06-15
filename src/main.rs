@@ -63,7 +63,8 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/api/web")
                     .wrap(auth)
                     .service(handlers::task_handler::tasks_post)
-                    .service(handlers::task_handler::tasks_get),
+                    .service(handlers::task_handler::tasks_get)
+                    .service(handlers::implant_handler::implants_get),
             )
     })
     .bind(("127.0.0.1", 8080))?
