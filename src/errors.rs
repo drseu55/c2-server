@@ -91,6 +91,18 @@ impl std::convert::From<Box<bincode::ErrorKind>> for ServerError {
     }
 }
 
+impl std::convert::From<std::io::Error> for ServerError {
+    fn from(_err: std::io::Error) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
+impl std::convert::From<serde_json::Error> for ServerError {
+    fn from(_err: serde_json::Error) -> Self {
+        ServerError::InternalServerError
+    }
+}
+
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
 impl ResponseError for ServerError {
     fn error_response(&self) -> HttpResponse {

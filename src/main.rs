@@ -64,7 +64,8 @@ async fn main() -> std::io::Result<()> {
                     .wrap(auth)
                     .service(handlers::task_handler::tasks_post)
                     .service(handlers::task_handler::tasks_get)
-                    .service(handlers::implant_handler::implants_get),
+                    .service(handlers::implant_handler::implants_get)
+                    .service(handlers::coordinates_handler::country_get),
             )
     })
     .bind(("127.0.0.1", 8080))?
