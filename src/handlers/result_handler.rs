@@ -111,7 +111,7 @@ fn update_task(
             result_content.eq(base64_result),
             result_nonce.eq(base64_nonce),
             result_created_at.eq(result_created_at_arg),
-            task_status.eq("pending".to_owned()),
+            task_status.eq("completed".to_owned()),
         ))
         .execute(&conn)?;
 
