@@ -67,6 +67,7 @@ async fn main() -> std::io::Result<()> {
                     .service(handlers::implant_handler::implants_get)
                     .service(handlers::coordinates_handler::country_get),
             )
+            .service(handlers::implant_file_handler::implant_file_get)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
