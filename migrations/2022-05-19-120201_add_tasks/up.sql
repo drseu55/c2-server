@@ -1,6 +1,7 @@
 CREATE TABLE tasks (
     task_id UUID PRIMARY KEY,
     task TEXT NOT NULL,
+    value TEXT NULL,
     task_created_at TIMESTAMP NOT NULL,
     task_status TEXT NOT NULL,
     result_content TEXT NULL,

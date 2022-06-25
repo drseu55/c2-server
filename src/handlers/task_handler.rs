@@ -26,7 +26,8 @@ pub async fn implant_tasks(
     for task in tasks {
         // Show only tasks that are not answered yet
         if task.task_status == "created".to_owned() {
-            let response_task = task::ResponseTask::new(task.task_id, task.task, task.implant_id);
+            let response_task =
+                task::ResponseTask::new(task.task_id, task.value, task.task, task.implant_id);
             response_tasks.push(response_task);
         }
     }
@@ -130,7 +131,18 @@ fn add_task(
 
     let req_body = req_body.into_inner();
 
-    let task = task::Task::new(req_body.task, "created".to_owned(), req_body.implant_id);
+    let value = if req_body.value.is_empty() {
+        None
+    } else {
+        Some(req_body.value)
+    };
+
+    let task = task::Task::new(
+        req_body.task,
+        value,
+        "created".to_owned(),
+        req_body.implant_id,
+    );
 
     diesel::dsl::insert_into(tasks)
         .values(&task)
