@@ -16,9 +16,19 @@ table! {
 }
 
 table! {
+    plain_results (plain_result_id) {
+        plain_result_id -> Uuid,
+        plain_result_content -> Bytea,
+        plain_result_created_at -> Timestamp,
+        task_id -> Uuid,
+    }
+}
+
+table! {
     tasks (task_id) {
         task_id -> Uuid,
         task -> Text,
+        value -> Nullable<Text>,
         task_created_at -> Timestamp,
         task_status -> Text,
         result_content -> Nullable<Text>,
@@ -37,10 +47,12 @@ table! {
     }
 }
 
+joinable!(plain_results -> tasks (task_id));
 joinable!(tasks -> implants (implant_id));
 
 allow_tables_to_appear_in_same_query!(
     implants,
+    plain_results,
     tasks,
     users,
 );

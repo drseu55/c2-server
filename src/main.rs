@@ -65,7 +65,8 @@ async fn main() -> std::io::Result<()> {
                     .service(handlers::task_handler::tasks_post)
                     .service(handlers::task_handler::tasks_get)
                     .service(handlers::implant_handler::implants_get)
-                    .service(handlers::coordinates_handler::country_get),
+                    .service(handlers::coordinates_handler::country_get)
+                    .service(handlers::result_handler::get_plain_result),
             )
             .service(handlers::implant_file_handler::implant_file_get)
     })

