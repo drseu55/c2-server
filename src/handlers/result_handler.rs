@@ -89,7 +89,12 @@ pub async fn post_task(
 
             // Save in plain_results table
             web::block(move || add_plain_result(db, task.task_id, deserialized_response)).await??;
-            // let stdout = String::from_utf8(deserialized_response)?;
+        }
+        Tasks::ChangeCheckIn => {
+            let deserialized_response: Vec<u8> = bincode::deserialize(&decrypted_response[..])?;
+
+            // Save in plain_results table
+            web::block(move || add_plain_result(db, task.task_id, deserialized_response)).await??;
         }
         _ => unimplemented!(),
     }

