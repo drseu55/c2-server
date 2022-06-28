@@ -20,6 +20,7 @@ table! {
         plain_result_id -> Uuid,
         plain_result_content -> Bytea,
         plain_result_created_at -> Timestamp,
+        image_url -> Nullable<Text>,
         task_id -> Uuid,
     }
 }

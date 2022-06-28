@@ -2,6 +2,7 @@
 extern crate diesel;
 
 use actix_cors::Cors;
+use actix_files as fs;
 use actix_web::{dev::ServiceRequest, middleware, web, App, HttpServer, Result};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
@@ -51,8 +52,10 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::PayloadConfig::new(1 << 25))
             .wrap(cors)
             .wrap(middleware::Logger::default())
+            .service(fs::Files::new("/assets", "./assets").show_files_listing())
             .service(handlers::ping_handler::ping)
             .service(handlers::exchange_handler::init_exchange)
             .service(handlers::auth_handler::auth)

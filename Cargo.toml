@@ -28,3 +28,4 @@ uuid = { version = "0.8.2", features = ["serde", "v4"] }
 thiserror = "1"
 jsonwebtoken = "8"
 arrayvec = "0"
+execute = "0"
